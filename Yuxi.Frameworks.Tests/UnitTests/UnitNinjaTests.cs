@@ -63,7 +63,7 @@
         [TestCase]
         public void UpdateTestClan()
         {
-            var ninjaClan = _ninjaClanRepository.Query(new FilterNinjaClanByNameExpressionSpecification("TestClan")).Select().FirstOrDefault();
+            var ninjaClan = _ninjaClanRepository.Query(new FilterNinjaClanByNameExpressionSpecification("TestClan")).Select().First();
 
             ninjaClan.ClanName = "modified clan name";
             ninjaClan.TrackingState = TrackingState.Modified;
