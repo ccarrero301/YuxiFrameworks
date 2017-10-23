@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Yuxi.Frameworks.Tests.UnitTests
+﻿namespace Yuxi.Frameworks.Tests.UnitTests
 {
     using System.Collections.Generic;
     using System.Linq;
