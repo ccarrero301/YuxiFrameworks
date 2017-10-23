@@ -1,4 +1,6 @@
-﻿namespace Yuxi.Frameworks.Tests.UnitTests
+﻿using System.Threading.Tasks;
+
+namespace Yuxi.Frameworks.Tests.UnitTests
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -19,9 +21,9 @@
     {
         #region Members
 
-        private NinjaClanFakeContext _ninjaClanContext;
+        private NinjaClanFakeContext _ninjaClanFakeContext;
         private IUnitOfWorkAsync _unitOfWorkAsync;
-        private IRepository<NinjaClan> _ninjaClanRepository;
+        private IRepositoryAsync<NinjaClan> _ninjaClanRepository;
         private QueryFluent<NinjaClan> _query;
         
         #endregion
@@ -31,9 +33,9 @@
         [SetUp]
         public void TestInitialize()
         {
-            _ninjaClanContext = new NinjaClanFakeContext();
-            _unitOfWorkAsync = new UnitOfWork(_ninjaClanContext);
-            _ninjaClanRepository = _unitOfWorkAsync.Repository<NinjaClan>();
+            _ninjaClanFakeContext = new NinjaClanFakeContext();
+            _unitOfWorkAsync = new UnitOfWork(_ninjaClanFakeContext);
+            _ninjaClanRepository = _unitOfWorkAsync.RepositoryAsync<NinjaClan>();
 
             CreateClans();
         }
@@ -78,7 +80,7 @@
         [TestCase]
         public void DeleteTestClan()
         {
-            var ninjaClan =_ninjaClanRepository.Query().Select().ToList().First();
+            var ninjaClan = _ninjaClanRepository.Query(new FilterNinjaClanByNameExpressionSpecification("TestClan")).Select().ToList().First();
 
             _ninjaClanRepository.Delete(ninjaClan);
 
@@ -88,9 +90,19 @@
         }
 
         [TestCase]
+        public void DeleteByIdTestClan()
+        {
+            _ninjaClanRepository.Delete(1);
+
+            var shouldNotExistClan = _ninjaClanRepository.Query(new FilterNinjaClanByNameExpressionSpecification("TestClan")).Select().SingleOrDefault();
+
+            Assert.IsNull(shouldNotExistClan);
+        }
+
+        [TestCase]
         public void QuerySelectTestClan()
         {
-            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
+            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanFakeContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
 
             var ninjaClan = _query.Select().ToList();
 
@@ -102,7 +114,7 @@
         [TestCase]
         public void QuerySelectExpressionTestClan()
         {
-            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
+            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanFakeContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
 
             var ninjaClan = _query.Select(x => x.ClanName).ToList();
 
@@ -113,7 +125,7 @@
         [TestCase]
         public void QuerySelectOrderByExpressionTestClan()
         {
-            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
+            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanFakeContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
 
             var ninjaClan = _query.OrderBy(x => x.OrderBy(clan => clan.ClanName)).Select().First();
 
@@ -123,7 +135,7 @@
         [TestCase]
         public void QuerySelectOrderByAndIncludeTestClan()
         {
-            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
+            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanFakeContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
 
             var ninjaEquipmentOwned = _query.Include(clan => clan.Ninjas).Select().First().Ninjas.First().EquipmentOwned;
 
@@ -134,7 +146,7 @@
         [TestCase]
         public void QuerySelectAndPageTestClan()
         {
-            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
+            _query = new QueryFluent<NinjaClan>(new Repository<NinjaClan>(_ninjaClanFakeContext, _unitOfWorkAsync), new AllNinjaExpressionSpecification());
 
             var ninjaClans = _query.SelectPage(1, 1, out var totalCount).ToList();
 
@@ -149,6 +161,23 @@
 
             Assert.IsNotNull(ninjaClan);
             Assert.AreEqual(1, ninjaClan.Id);
+        }
+
+        [TestCase]
+        public void GetRepositoryTestClan()
+        {
+            var newNinjaClanRepository = _ninjaClanRepository.GetRepository<NinjaClan>();
+
+            Assert.IsNotNull(newNinjaClanRepository);
+            Assert.IsInstanceOf<IRepository<NinjaClan>>(newNinjaClanRepository);
+        }
+
+        [TestCase]
+        public void GetQueryableTest()
+        {
+            var queryableNinjaClan =_ninjaClanRepository.Queryable();
+
+            Assert.IsNotNull(queryableNinjaClan);
         }
 
         #endregion
