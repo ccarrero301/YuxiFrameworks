@@ -1,4 +1,4 @@
-﻿namespace Yuxi.Frameworks.Repository.Implementations.Repository
+﻿namespace Yuxi.Frameworks.Repository.Standard.Implementations.Repository
 {
     using System;
     using System.Collections.Generic;
@@ -14,8 +14,9 @@
     using DataContext;
     using Query;
     using Utils;
-    using Specification.Base;
-    using TrackableEntities;
+    using EFCore = Microsoft.EntityFrameworkCore;
+    using TrackableEntities.Common.Core;
+    using Specification.Standard.Base;
 
     public class Repository<TAgreggate> : IRepositoryAsync<TAgreggate> where TAgreggate : class, ITrackable
     {
@@ -23,7 +24,7 @@
 
         private readonly IDataContextAsync _context;
 
-        private readonly DbSet<TAgreggate> _dbSet;
+        private readonly EFCore.DbSet<TAgreggate> _dbSet;
 
         private readonly IUnitOfWorkAsync _unitOfWork;
 
@@ -38,7 +39,7 @@
 
             switch (context)
             {
-                case DbContext dbContext:
+                case EFCore.DbContext dbContext:
                     _dbSet = dbContext.Set<TAgreggate>();
                     break;
                 case FakeDbContext fakeContext:
@@ -162,7 +163,7 @@
 
             if (includes != null)
             {
-                query = includes.Aggregate(query,(current, include) => current.Include(include));
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
             }
             if (orderBy != null)
             {

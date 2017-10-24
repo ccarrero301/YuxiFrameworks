@@ -1,25 +1,27 @@
-﻿namespace Yuxi.Frameworks.Repository.Implementations.DataContext
+﻿namespace Yuxi.Frameworks.Repository.Standard.Implementations.DataContext
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Data.Entity;
     using System.Linq;
     using Utils;
     using Contracts.DataContext;
-    using TrackableEntities;
-    using TrackableEntities.EF6;
+    using EFCore = Microsoft.EntityFrameworkCore;
+    using TrackableEntities.Common.Core;
+    using TrackableEntities.EF.Core;
 
-    public class DataContext : DbContext, IDataContextAsync
+    public class DataContext : EFCore.DbContext, IDataContextAsync
     {
         #region Constructors
 
-        public DataContext(string nameOrConnectionString) : base(nameOrConnectionString)
+        public DataContext(EFCore.DbContextOptions options) : base(options)
         {
             InstanceId = Guid.NewGuid();
+        }
 
-            Configuration.LazyLoadingEnabled = false;
-            Configuration.ProxyCreationEnabled = false;
+        public DataContext()
+        {
+            InstanceId = Guid.NewGuid();
         }
 
         #endregion
@@ -40,12 +42,7 @@
             return changes;
         }
 
-        public override async Task<int> SaveChangesAsync()
-        {
-            return await SaveChangesAsync(CancellationToken.None);
-        }
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             SyncObjectsStatePreCommit();
             var changesAsync = await base.SaveChangesAsync(cancellationToken);
@@ -76,9 +73,9 @@
 
         private void SyncObjectsStatePreCommit()
         {
-            var entities = ChangeTracker.Entries().Select(x => x.Entity).OfType<ITrackable>().ToList();
+            var entities = ChangeTracker.Entries().Select(x => x.Entity).OfType<ITrackable>();
 
-            this.ApplyChanges(entities);
+            this.ApplyChanges(entities.ToList());
         }
 
         #endregion
